@@ -4,131 +4,150 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.cluster import KMeans
-import plotly.express as px
+import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Rural Cyber-Help Desk", layout="wide")
+# Streamlit Page Config
+st.set_page_config(page_title="Rural Cyber-Help Desk", page_icon="🛡️", layout="wide")
 
-# 1. Voice Assistant Function (Browser Text-to-Speech via JavaScript)
-def speak_text(text, lang='ta-IN'):
-    js_code = f"""
-        <script>
-            var msg = new SpeechSynthesisUtterance('{text}');
-            msg.lang = '{lang}';
-            window.speechSynthesis.speak(msg);
-        </script>
-    """
-    st.components.v1.html(js_code, height=0)
+# App Header
+st.title("🛡️ Rural Community Cyber-Help Desk: Real-Time Scam & Risk Analytics")
 
-# Title & Language Selector
-st.title("🛡️ Rural Community Cyber-Help Desk (Live Analytics & Voice Assistant)")
-
+# 1. Multi-Language Selection
 language = st.sidebar.selectbox(
-    "🌐 Choose Language / மொழி:", 
+    "🌐 Choose Assistant Language / மொழியைத் தேர்ந்தெடுக்கவும்:", 
     ["Tamil (தமிழ்)", "Tanglish", "English"]
 )
 
-# Train NLP Scam Model
+# Language Dictionary for UI
+if language == "Tamil (தமிழ்)":
+    lang_code = "ta"
+    sim_title = "📲 புதிய SMS அறிவிப்பு (Live Incoming SMS Simulation)"
+    analyze_btn = "🔔 அறிவிப்பை பகுப்பாய்வு செய் (Read & Analyze SMS)"
+    scam_msg = "🚨 எச்சரிக்கை: இது ஒரு மோசடி குறுஞ்செய்தி! எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்!"
+    safe_msg = "✅ பாதுகாப்பு: இது ஒரு சாதாரண குறுஞ்செய்திதான்."
+elif language == "Tanglish":
+    lang_code = "en"
+    sim_title = "📲 Puthu SMS Notification (Live Incoming SMS Simulation)"
+    analyze_btn = "🔔 Notification Read & Analyze Pannu"
+    scam_msg = "🚨 ALERT: Idhu ஒரு Fake Fraud Message! Link-ai click seyyavendam!"
+    safe_msg = "✅ SAFE: Idhu normal message thaan."
+else:
+    lang_code = "en"
+    sim_title = "📲 Live Incoming SMS Notification"
+    analyze_btn = "🔔 Read & Analyze Notification"
+    scam_msg = "🚨 ALERT: Scam Detected! Do not click any links!"
+    safe_msg = "✅ SAFE: Legitimate Message."
+
+# --- MODEL TRAINING SECTION ---
+# Cognitive NLP Model
 training_messages = [
     "Your bank account is blocked. Click the link to update KYC immediately.",
     "Congratulations! You won a lottery of 10 lakhs. Call this number to claim.",
     "Hi, are we meeting for project discussion tomorrow at 10 AM?",
     "Urgent: Your electricity bill will be disconnected tonight. Pay via this link.",
     "Your OTP for banking transaction is 4892. Do not share with anyone.",
-    "Mom, please pick up some groceries on your way back home."
+    "Mom, please pick up some groceries on your way back home.",
+    "Your credit card reward points are expiring today. Redeem now.",
+    "Hey, let's catch up for coffee this weekend."
 ]
-labels = ['Scam', 'Scam', 'Non-Scam', 'Scam', 'Non-Scam', 'Non-Scam']
+labels = ['Scam', 'Scam', 'Non-Scam', 'Scam', 'Non-Scam', 'Non-Scam', 'Scam', 'Non-Scam']
 
 vectorizer = CountVectorizer()
 X_train = vectorizer.fit_transform(training_messages)
 nlp_model = MultinomialNB()
 nlp_model.fit(X_train, labels)
 
-# Train Behavioral K-Means Model
+# Behavioral K-Means Model
 behavior_data = pd.DataFrame({
-    'User_ID': range(1, 11),
+    'User_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     'Monthly_Transactions': [2, 25, 22, 3, 20, 1, 18, 24, 4, 15],
     'Digital_Awareness_Score': [20, 90, 88, 25, 82, 15, 85, 92, 30, 78]
 })
 kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
 behavior_data['Risk_Cluster'] = kmeans.fit_predict(behavior_data[['Monthly_Transactions', 'Digital_Awareness_Score']])
 
-# 2. Live Notification Simulation Section (No Manual Typing Needed!)
-st.subheader("📲 Incoming SMS Live Detector & Voice Alert")
+# --- UI DASHBOARD LAYOUT ---
+st.subheader(sim_title)
 
-preset_sms = st.radio(
-    "Select Simulated Incoming SMS (Notification Simulation):",
-    [
-        "🚨 [SCAM] Your bank account is blocked. Click link to verify KYC.",
-        "🚨 [SCAM] Urgent: Electricity bill unpaid. Disconnecting tonight!",
-        "✅ [SAFE] Hi Abinaya, please send the python project notes."
-    ]
-)
+# Simulated Incoming SMS List
+sample_sms_list = [
+    "Urgent: Your SBI Bank Account has been locked! Verify KYC now: http://sbi-fake.com",
+    "Hi Abinaya, please bring the computer science notes tomorrow.",
+    "Congratulations! You won Rs. 50,000 cash reward. Click to claim immediately.",
+    "Your electricity connection will be disconnected by 9 PM tonight due to unpaid bill."
+]
 
-if st.button("🔔 Simulate Incoming SMS Notification"):
-    # Extract clean text
-    incoming_text = preset_sms.split("] ")[1]
-    
-    # NLP Prediction
-    X_test = vectorizer.transform([incoming_text])
-    prediction = nlp_model.predict(X_test)[0]
-    probs = nlp_model.predict_proba(X_test)[0]
-    scam_prob = round(max(probs) * 100, 2)
+selected_sms = st.selectbox("📩 Select/Simulate Incoming SMS Notification:", sample_sms_list)
 
-    # UI Alert & Voice Assistant Logic
-    col1, col2 = st.columns([1, 1])
+# Permission Toggle Simulation
+allow_notification = st.checkbox("🔔 Allow SMS Read & Voice Alert Permission (இணைப்பு அனுமதி)", value=True)
 
-    with col1:
-        st.info(f"**Incoming Message:** {incoming_text}")
-        if prediction == 'Scam':
-            st.error("🚨 ALERT: SCAM DETECTED!")
+if allow_notification:
+    if st.button(analyze_btn):
+        # NLP Cognitive Analysis
+        X_test = vectorizer.transform([selected_sms])
+        prediction = nlp_model.predict(X_test)[0]
+        prob = nlp_model.predict_proba(X_test)[0] # Confidence percentage
+        scam_score = prob[0] * 100 if nlp_model.classes_[0] == 'Scam' else prob[1] * 100
+
+        col1, col2 = st.columns([1, 1])
+
+        with col1:
+            st.markdown("### 🧠 Cognitive Analytics (NLP Analysis)")
+            st.info(f"**Incoming Message Text:**\n_{selected_sms}_")
             
-            if language == "Tamil (தமிழ்)":
-                voice_msg = "எச்சரிக்கை! இது ஒரு போலியான மோசடி செய்தி! யாரும் லிங்கை கிளிக் செய்ய வேண்டாம்!"
-            elif language == "Tanglish":
-                voice_msg = "Alert! Idhu oru fake scam message! Yaarum link click panna vendam!"
+            if prediction == 'Scam':
+                st.error(scam_msg)
+                # Voice Alert using Browser Speech
+                voice_text = "Warning! Scam message detected. Do not click links." if lang_code == "en" else "எச்சரிக்கை! இது ஒரு போலியான செய்தி. லிங்கை கிளிக் செய்ய வேண்டாம்."
+                st.components.v1.html(
+                    f"""
+                    <script>
+                        var msg = new SpeechSynthesisUtterance('{voice_text}');
+                        msg.lang = '{lang_code}';
+                        window.speechSynthesis.speak(msg);
+                    </script>
+                    """,
+                    height=0
+                )
             else:
-                voice_msg = "Warning! This is a scam message. Do not click any link!"
-                
-            speak_text(voice_msg)
-        else:
-            st.success("✅ SAFE / NON-SCAM MESSAGE")
+                st.success(safe_msg)
+                voice_text = "Safe message." if lang_code == "en" else "பாதுகாப்பான செய்தி."
+                st.components.v1.html(
+                    f"""
+                    <script>
+                        var msg = new SpeechSynthesisUtterance('{voice_text}');
+                        msg.lang = '{lang_code}';
+                        window.speechSynthesis.speak(msg);
+                    </script>
+                    """,
+                    height=0
+                )
+
+            # Live Bar Chart for Cognitive NLP Scam Confidence
+            st.markdown("#### 📊 Live Scam Risk Score")
+            fig_cog, ax_cog = plt.subplots(figsize=(5, 3))
+            ax_cog.bar(['Safe Score', 'Scam Risk Score'], [100 - scam_score, scam_score], color=['green', 'red'])
+            ax_cog.set_ylabel("Percentage (%)")
+            st.pyplot(fig_cog)
+
+        with col2:
+            st.markdown("### 📊 Behavioral Analytics (K-Means Clustering)")
+            st.write("User Risk Segmentation for Rural Community")
             
-            if language == "Tamil (தமிழ்)":
-                voice_msg = "இது ஒரு பாதுகாப்பான செய்தி."
-            elif language == "Tanglish":
-                voice_msg = "Idhu oru safe-ana normal message."
-            else:
-                voice_msg = "This is a safe message."
-                
-            speak_text(voice_msg)
-
-    # 3. Live Analytics Dashboard
-    st.markdown("---")
-    st.subheader("📊 Live Analytics Dashboard")
-
-    chart_col1, chart_col2 = st.columns(2)
-
-    with chart_col1:
-        st.markdown("### 🧠 Cognitive Analytics (NLP Confidence)")
-        fig_nlp = px.bar(
-            x=['Scam Probability', 'Safe Probability'], 
-            y=[probs[1]*100 if nlp_model.classes_[1]=='Scam' else probs[0]*100, 
-               probs[0]*100 if nlp_model.classes_[0]=='Non-Scam' else probs[1]*100],
-            color=['Scam', 'Safe'],
-            color_discrete_map={'Scam': 'red', 'Safe': 'green'},
-            labels={'x': 'Analysis', 'y': 'Percentage (%)'},
-            title="Cognitive Model Confidence Level"
-        )
-        st.plotly_chart(fig_nlp, use_container_width=True)
-
-    with chart_col2:
-        st.markdown("### 👥 Behavioral Analytics (K-Means User Segmentation)")
-        fig_kmeans = px.scatter(
-            behavior_data, 
-            x='Monthly_Transactions', 
-            y='Digital_Awareness_Score',
-            color='Risk_Cluster',
-            title="Rural User Cyber Risk Clustering",
-            labels={'Risk_Cluster': 'Cluster Group'}
-        )
-        st.plotly_chart(fig_kmeans, use_container_width=True)
+            # Live Plotting K-Means
+            fig_beh, ax_beh = plt.subplots(figsize=(5, 3.8))
+            ax_beh.scatter(behavior_data[behavior_data['Risk_Cluster'] == 0]['Monthly_Transactions'], 
+                           behavior_data[behavior_data['Risk_Cluster'] == 0]['Digital_Awareness_Score'], 
+                           color='red', label='High Risk (Low Literacy)', s=80)
+            ax_beh.scatter(behavior_data[behavior_data['Risk_Cluster'] == 1]['Monthly_Transactions'], 
+                           behavior_data[behavior_data['Risk_Cluster'] == 1]['Digital_Awareness_Score'], 
+                           color='green', label='Safe Users', s=80)
+            
+            # Highlighting current simulated target user
+            ax_beh.scatter([2], [20], color='yellow', edgecolor='black', s=200, marker='*', label='Current SMS Recipient')
+            ax_beh.set_xlabel('Monthly Digital Transactions')
+            ax_beh.set_ylabel('Digital Awareness Score')
+            ax_beh.legend(loc='lower right', fontsize='small')
+            ax_beh.grid(True)
+            st.pyplot(fig_beh)
