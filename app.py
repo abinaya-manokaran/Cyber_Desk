@@ -1,97 +1,87 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.cluster import KMeans
 
-st.set_page_config(page_title="Rural Cyber-Help Desk", page_icon="🛡️", layout="wide")
+# Page Configuration
+st.set_page_config(page_title="Rural Cyber Help Desk", page_icon="🛡️", layout="wide")
 
-st.title("🛡️ Community Cyber-Help Desk for Rural Awareness")
-st.write("Real-Time Cognitive Scam Detection & Behavioral Risk Analytics")
+st.title("🛡️ Rural Community Cyber-Help Desk")
 
-# Tab Selection for Modules
-tab1, tab2 = st.tabs(["🧠 Cognitive Analytics (NLP Scam Alert)", "📊 Behavioral Analytics (K-Means Risk)"])
+# Language Selection
+language = st.sidebar.selectbox("Select Language / மொழி", ["Tanglish", "Tamil (தமிழ்)", "English"])
 
 # ---------------------------------------------------------
-# TAB 1: COGNITIVE ANALYTICS (NLP REAL-TIME NOTIFICATION)
+# 1. COGNITIVE ANALYTICS (NLP SCAM DETECTOR)
 # ---------------------------------------------------------
-with tab1:
-    st.header("Cognitive Analytics: Real-Time SMS Scam Detection")
-    st.info("💡 Concept: Automated background service listens to incoming SMS and triggers immediate notification for rural users.")
+# Model Training (Expanded with diverse patterns)
+training_messages = [
+    "Your bank account is blocked. Click link to update KYC immediately.",
+    "Congratulations! You won a lottery of 10 lakhs. Call this number to claim.",
+    "Urgent: Your electricity bill will be disconnected tonight. Pay via this link.",
+    "Your credit card reward points are expiring today. Redeem now.",
+    "Free loan approved up to 5 Lakhs! Click here to get instant money in account.",
+    "Hi, are we meeting for project discussion tomorrow at 10 AM?",
+    "Your OTP for banking transaction is 4892. Do not share with anyone.",
+    "Mom, please pick up some groceries on your way back home.",
+    "Hey, let's catch up for coffee this weekend.",
+    "Dear customer, your Amazon order #10492 has been dispatched successfully."
+]
+labels = ['Scam', 'Scam', 'Scam', 'Scam', 'Scam', 'Non-Scam', 'Non-Scam', 'Non-Scam', 'Non-Scam', 'Non-Scam']
 
-    # Train NLP Model
-    training_messages = [
-        "Your bank account is blocked. Click link to update KYC immediately.",
-        "Congratulations! You won a lottery of 10 lakhs. Call this number to claim.",
-        "Hi, are we meeting for project discussion tomorrow at 10 AM?",
-        "Urgent: Your electricity bill will be disconnected tonight. Pay via this link.",
-        "Your OTP for banking transaction is 4892. Do not share with anyone.",
-        "Mom, please pick up some groceries on your way back home.",
-        "Your credit card reward points are expiring today. Redeem now.",
-        "Hey, let's catch up for coffee this weekend."
-    ]
-    labels = ['Scam', 'Scam', 'Non-Scam', 'Scam', 'Non-Scam', 'Non-Scam', 'Scam', 'Non-Scam']
+vectorizer = CountVectorizer()
+X_train = vectorizer.fit_transform(training_messages)
+nlp_model = MultinomialNB()
+nlp_model.fit(X_train, labels)
 
-    vectorizer = CountVectorizer()
-    X_train = vectorizer.fit_transform(training_messages)
-    nlp_model = MultinomialNB()
-    nlp_model.fit(X_train, labels)
+st.header("1. Cognitive Analytics: Real-Time SMS Detector (NLP)")
 
-    # Simulated Incoming SMS Notification
-    st.subheader("📲 Simulated Incoming Phone Notification")
-    
-    sample_sms = st.selectbox("Simulate Incoming SMS on Rural User's Phone:", [
-        "Urgent: Your electricity bill will be disconnected tonight. Pay via this link.",
-        "Hi Abinaya, are we meeting for project discussion tomorrow?",
-        "Your bank account is blocked. Click the link to update KYC immediately."
-    ])
+# Quick Sample Message Buttons for Easy Demo
+st.write("👉 **Quick Demo Samples (Click to test instantly):**")
+col1, col2, col3 = st.columns(3)
 
-    if st.button("Trigger Phone Notification"):
-        X_test = vectorizer.transform([sample_sms])
+sample_text = ""
+if col1.button("📩 Test Sample 1 (Banking Scam)"):
+    sample_text = "Your ATM Card is deactivated! Click link to update KYC or account will be closed."
+if col2.button("📩 Test Sample 2 (Lottery Scam)"):
+    sample_text = "Urgent! Claim your cash prize of Rs 50,000 by clicking this link."
+if col3.button("📩 Test Sample 3 (Safe SMS)"):
+    sample_text = "Your doctor appointment is confirmed for tomorrow 5 PM."
+
+# User Input Box
+user_message = st.text_area("Or enter any incoming SMS received on phone:", value=sample_text, height=100)
+
+if st.button("🔍 Analyze Message (Cognitive Check)"):
+    if user_message.strip() != "":
+        X_test = vectorizer.transform([user_message])
         prediction = nlp_model.predict(X_test)[0]
-
-        # Display like a phone banner alert
-        st.markdown("---")
-        st.caption("🔔 **INCOMING NOTIFICATION BANNER**")
+        
         if prediction == 'Scam':
-            st.error(f"🚨 **ALERT: FRAUD / SCAM SMS DETECTED!**\n\n**Message:** {sample_sms}\n\n⚠️ *Warning: Do NOT click any links or reply to this message!*")
+            st.error("🚨 **ALERT: SCAM DETECTED!** Idhu oru fake / fraud message. Link-ai click செய்ய வேண்டாம்!")
         else:
-            st.success(f"✅ **SAFE SMS**\n\n**Message:** {sample_sms}\n\n*This message appears to be safe.*")
+            st.success("✅ **SAFE MESSAGE:** Idhu oru normal-ana safe message thaan.")
+    else:
+        st.warning("Please enter or select a message to analyze.")
+
+st.markdown("---")
 
 # ---------------------------------------------------------
-# TAB 2: BEHAVIORAL ANALYTICS (K-MEANS CLUSTERING)
+# 2. BEHAVIORAL ANALYTICS (K-MEANS USER RISK CLUSTERING)
 # ---------------------------------------------------------
-with tab2:
-    st.header("Behavioral Analytics: User Risk Segmentation (K-Means)")
-    st.write("Grouping rural users based on transaction frequency and digital literacy to identify high-risk individuals.")
+st.header("2. Behavioral Analytics: User Risk Profiling (K-Means)")
+st.write("Gramathu makkalin digital use-case vechu avanga 'High Cyber Risk'-la irukankala nu find pannuthoi.")
 
-    # Behavioral Data
-    behavior_data = {
-        'User_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        'Monthly_Transactions': [2, 25, 22, 3, 20, 1, 18, 24, 4, 15],
-        'Digital_Awareness_Score': [20, 90, 88, 25, 82, 15, 85, 92, 30, 78]
-    }
-    df_behavior = pd.DataFrame(behavior_data)
+# K-Means Training Data
+behavior_data = {
+    'User_ID': [101, 102, 103, 104, 105, 106],
+    'Monthly_Transactions': [2, 25, 3, 22, 1, 18],
+    'Digital_Awareness_Score (Out of 100)': [20, 90, 25, 85, 15, 88]
+}
+df_beh = pd.DataFrame(behavior_data)
 
-    X_behavior = df_behavior[['Monthly_Transactions', 'Digital_Awareness_Score']]
-    kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
-    df_behavior['Risk_Cluster'] = kmeans.fit_predict(X_behavior)
+kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
+df_beh['Risk_Cluster'] = kmeans.fit_predict(df_beh[['Monthly_Transactions', 'Digital_Awareness_Score (Out of 100)']])
+df_beh['Risk Level'] = df_beh['Risk_Cluster'].map({0: '🔴 High Cyber Risk (Needs Help)', 1: '🟢 Safe / Digitally Aware'})
 
-    # Plot Clusters
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.scatter(df_behavior[df_behavior['Risk_Cluster'] == 0]['Monthly_Transactions'], 
-               df_behavior[df_behavior['Risk_Cluster'] == 0]['Digital_Awareness_Score'], 
-               color='red', s=100, label='High Cyber Risk Group (Low Literacy)')
-
-    ax.scatter(df_behavior[df_behavior['Risk_Cluster'] == 1]['Monthly_Transactions'], 
-               df_behavior[df_behavior['Risk_Cluster'] == 1]['Digital_Awareness_Score'], 
-               color='green', s=100, label='Low Risk / Digitally Aware Group')
-
-    ax.set_title('K-Means Behavioral Segmentation')
-    ax.set_xlabel('Monthly Digital Transactions')
-    ax.set_ylabel('Digital Awareness Score')
-    ax.legend()
-    ax.grid(True)
-
-    st.pyplot(fig)
+st.dataframe(df_beh[['User_ID', 'Monthly_Transactions', 'Digital_Awareness_Score (Out of 100)', 'Risk Level']])
