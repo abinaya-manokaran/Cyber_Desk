@@ -1,25 +1,45 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
+import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 
-# ---------------------------------------------------------
-# Page Configuration & Title
-# ---------------------------------------------------------
-st.set_page_config(page_title="Community Cyber-Help Desk", layout="wide")
+st.set_page_config(page_title="Cyber-Help Desk", page_icon="🛡️", layout="wide")
 
-st.title("🛡️ Community Cyber-Help Desk for Rural Safety")
-st.write("Real-time AI Scam Detection using Cognitive Analytics (NLP) & Behavioral Risk Profiling (K-Means)")
+# App Header
+st.title("🛡️ Rural Community Cyber-Help Desk: Real-Time AI Scam Detector")
 
-# ---------------------------------------------------------
-# 1. Cognitive Analytics (NLP Model Training)
-# ---------------------------------------------------------
+# Language Selector
+language = st.selectbox("Choose Language / மொழியைத் தேர்ந்தெடுக்கவும்:", ["Tanglish", "Tamil (தமிழ்)", "English"])
+
+if language == "Tamil (தமிழ்)":
+    sub_title = "கிராமப்புற மக்களுக்கான நேரலை சைபர் மோசடி கண்டறிதல் மற்றும் உளவியல் பகுப்பாய்வு மையம்."
+    notif_header = "🔔 புதிய குறுஞ்செய்தி அறிவிப்பு (Incoming SMS Notification Banner)"
+    sample_header = "📩 மாதிரிச் செய்திகளைச் சோதிக்க கிளிக் செய்யவும் (Quick Sample SMS):"
+    custom_header = "✍️ அல்லது புதிய குறுஞ்செய்தியை உள்ளிடவும் (Custom SMS Input):"
+    btn_text = "பகுப்பாய்வு செய் (Analyze)"
+elif language == "English":
+    sub_title = "Real-time automated scam detection & behavioral analytics for rural communities."
+    notif_header = "🔔 Incoming SMS Notification Banner"
+    sample_header = "📩 Click to test Quick Sample SMS:"
+    custom_header = "✍️ Or Enter / Paste Any Custom SMS:"
+    btn_text = "Analyze Message"
+else: # Tanglish
+    sub_title = "Gramathu makkalukana real-time scam detection & behavioral analytics help desk."
+    notif_header = "🔔 New Incoming SMS Notification Banner"
+    sample_header = "📩 Sample SMS-ah click panni test pannunga:"
+    custom_header = "✍️ Alladhu pudhu SMS-ah inge type pannunga:"
+    btn_text = "Message-ah Analyze Pannunga"
+
+st.caption(sub_title)
+
+# --- 1. NLP MODEL TRAINING (COGNITIVE ANALYTICS) ---
 training_messages = [
     "Your bank account is blocked. Click the link to update KYC immediately.",
     "Congratulations! You won a lottery of 10 lakhs. Call this number to claim.",
-    "Hi Abinaya, are we meeting for project discussion tomorrow at 10 AM?",
+    "Hi, are we meeting for project discussion tomorrow at 10 AM?",
     "Urgent: Your electricity bill will be disconnected tonight. Pay via this link.",
     "Your OTP for banking transaction is 4892. Do not share with anyone.",
     "Mom, please pick up some groceries on your way back home.",
@@ -33,72 +53,73 @@ X_train = vectorizer.fit_transform(training_messages)
 nlp_model = MultinomialNB()
 nlp_model.fit(X_train, labels)
 
-# ---------------------------------------------------------
-# 2. Behavioral Analytics (K-Means Model Training)
-# ---------------------------------------------------------
-# Behavioral metric: [Monthly Transactions, Digital Literacy Score (1-100)]
-user_profiles = np.array([
-    [2, 20],   # Rural User 1: Low awareness, low transactions -> High Risk
-    [25, 90],  # User 2: Digitally literate -> Low Risk
-    [1, 15],   # Rural User 3: Low awareness -> High Risk
-    [20, 85]   # User 4: Digitally literate -> Low Risk
-])
-kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
-kmeans.fit(user_profiles)
+# Session state to track user history for live analytics
+if 'history' not in st.session_state:
+    st.session_state.history = []
 
-# ---------------------------------------------------------
-# 3. Quick Sample SMS Buttons for Demo
-# ---------------------------------------------------------
-st.subheader("📲 Quick Test with Sample Incoming SMS (ஒரே கிளிக்கில் சோதிக்க):")
+# --- 2. SAMPLE MESSAGES FOR EASY TESTING ---
+samples = [
+    "Urgent: Your electricity bill unpaid. Disconnection tonight! Link: http://bit.ly/pay",
+    "Congratulations! You won 1 ShareAuto Lucky Draw. Call 9876543210",
+    "Hi Abinaya, can you send the class notes for today's lecture?",
+    "Your SBI account blocked due to pending KYC. Click link to verify."
+]
 
-col1, col2, col3, col4 = st.columns(4)
+st.subheader(sample_header)
+cols = st.columns(len(samples))
+selected_sample = ""
 
-selected_msg = ""
+for i, sample in enumerate(samples):
+    if cols[i].button(f"SMS {i+1}", key=f"btn_{i}"):
+        selected_sample = sample
 
-if col1.button("🚨 Bank Blocked Scam"):
-    selected_msg = "Your SBI bank account is blocked today! Click link to unblock KYC."
+st.markdown("---")
 
-if col2.button("🚨 Electricity Bill Scam"):
-    selected_msg = "Urgent notice: Power will be disconnected at 9 PM. Pay electricity bill now."
+# --- 3. INPUT AREA (TYPED OR CLICKED) ---
+st.subheader(custom_header)
+user_msg = st.text_input("Incoming SMS Text:", value=selected_sample)
 
-if col3.button("✅ Normal Project Msg"):
-    selected_msg = "Can you please share the python machine learning notes by evening?"
-
-if col4.button("✅ Banking OTP Msg"):
-    selected_msg = "Your OTP for account login is 9876. Do not share it with anyone."
-
-# Custom Text Input field for any other new SMS
-user_input = st.text_input("Or enter/paste any custom incoming SMS below:", value=selected_msg)
-
-# ---------------------------------------------------------
-# 4. Real-Time Analytics & Output Display
-# ---------------------------------------------------------
-if st.button("🔍 Analyze Message & User Risk"):
-    if user_input.strip() != "":
-        # A. Cognitive Analysis (NLP)
-        X_test = vectorizer.transform([user_input])
-        nlp_prediction = nlp_model.predict(X_test)[0]
-        nlp_proba = nlp_model.predict_proba(X_test)[0]
+if st.button(btn_text) or user_msg:
+    if user_msg.strip() != "":
+        X_test = vectorizer.transform([user_msg])
+        pred = nlp_model.predict(X_test)[0]
         
-        st.markdown("---")
-        st.subheader("1. 🧠 Cognitive Analytics Result (NLP Scam Detection)")
+        # Save to history for real-time dynamic analytics
+        st.session_state.history.append({'message': user_msg, 'prediction': pred})
         
-        if nlp_prediction == 'Scam':
-            st.error(f"🚨 **ALERT: SCAM DETECTED!**\n\nThis message contains psychological triggers (Urgency/Fear). Do not click any links.")
+        # --- NOTIFICATION POP-UP BANNER SIMULATION ---
+        st.markdown("### " + notif_header)
+        if pred == 'Scam':
+            st.error(f"🚨 **POP-UP ALERT: SCAM SMS DETECTED!**\n\n**Received Text:** \"{user_msg}\"\n\n🛑 *Warning: Do NOT click any links or make payments!*")
         else:
-            st.success(f"✅ **SAFE MESSAGE**\n\nThis appears to be a genuine/safe message.")
-            
-        # B. Behavioral Analysis (K-Means)
-        st.subheader("2. 👥 Behavioral Analytics Result (K-Means User Risk Profiling)")
+            st.success(f"✅ **POP-UP NOTIFICATION: SAFE MESSAGE**\n\n**Received Text:** \"{user_msg}\"\n\n🟢 *This message appears legitimate.*")
+
+# --- 4. REAL-TIME DYNAMIC ANALYTICS DASHBOARD ---
+st.markdown("---")
+st.header("📊 Real-Time Analytics Dashboard")
+
+col_left, col_right = st.columns(2)
+
+# Module A: Cognitive Analytics (NLP Analysis)
+with col_left:
+    st.subheader("🧠 Cognitive Analytics (NLP Scam Ratio)")
+    if len(st.session_state.history) > 0:
+        df_hist = pd.DataFrame(st.session_state.history)
+        scam_counts = df_hist['prediction'].value_counts()
         
-        # Simulating rural user risk context
-        simulated_rural_user = np.array([[2, 20]])  # Low literacy rural user
-        user_cluster = kmeans.predict(simulated_rural_user)[0]
-        
-        if user_cluster == 0 or nlp_prediction == 'Scam':
-            st.warning("⚠️ **Behavioral Risk Segment:** High Vulnerability Group (Rural Context).\n"
-                       "Recommendation: Auto-block suspicious links and play Audio Voice Warning in local language.")
-        else:
-            st.info("ℹ️ **Behavioral Risk Segment:** Low Vulnerability / Digitally Aware Group.")
+        fig1, ax1 = plt.subplots(figsize=(4, 3))
+        ax1.pie(scam_counts, labels=scam_counts.index, autopct='%1.1f%%', colors=['#ff9999','#66b3ff'])
+        ax1.set_title("Live Analyzed Messages Distribution")
+        st.pyplot(fig1)
+        st.write(f"Total Messages Analyzed Live: **{len(df_hist)}**")
     else:
-        st.warning("Please select a sample message or enter a custom message to analyze.")
+        st.info("No messages analyzed yet in this session. Test a message above to see live NLP analytics!")
+
+# Module B: Behavioral Analytics (K-Means Clustering)
+with col_right:
+    st.subheader("👥 Behavioral Analytics (K-Means User Risk)")
+    
+    # Simulating village user risk segmentation
+    np.random.seed(42)
+    behavior_data = pd.DataFrame({
+        '
