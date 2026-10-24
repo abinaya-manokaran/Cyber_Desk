@@ -32,7 +32,7 @@ if language == "Tamil (தமிழ்)":
     voice_safe = "பாதுகாப்பான செய்தி. இது ஒரு சாதாரண குறுஞ்செய்திதான்."
 
 elif language == "Tanglish":
-    lang_code = "en-IN" # English synthesis reads Tanglish smoothly with Indian accent
+    lang_code = "en-IN"
     sim_title = "📲 Puthu SMS Notification Analysis"
     analyze_btn = "🔔 Notification Read & Analyze Pannu"
     scam_msg = "🚨 ALERT: Idhu oru Fake Fraud Message! Link-ai click seyyavendam!"
@@ -125,20 +125,18 @@ if allow_notification:
                     st.success(safe_msg)
                     voice_text = voice_safe
 
-                # Dynamic Voice Assistant Execution based on selected language
-                st.components.v1.html(
-                    f"""
-                    <script>
-                        if ('speechSynthesis' in window) {
-                            window.speechSynthesis.cancel(); // Stop previous speech if any
-                            var msg = new SpeechSynthesisUtterance("{voice_text}");
-                            msg.lang = "{lang_code}";
-                            window.speechSynthesis.speak(msg);
-                        }
-                    </script>
-                    """,
-                    height=0
-                )
+                # Clean JavaScript injection without comment syntax conflict inside f-string
+                js_code = f"""
+                <script>
+                    if ('speechSynthesis' in window) {{
+                        window.speechSynthesis.cancel();
+                        var msg = new SpeechSynthesisUtterance("{voice_text}");
+                        msg.lang = "{lang_code}";
+                        window.speechSynthesis.speak(msg);
+                    }}
+                </script>
+                """
+                st.components.v1.html(js_code, height=0)
 
                 # Live Bar Chart for Cognitive NLP Scam Confidence
                 st.markdown("#### 📊 Live Scam Risk Score")
