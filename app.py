@@ -1,12 +1,11 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import urllib.parse
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-from gtts import gTTS
-import os
 
 # Streamlit Page Config
 st.set_page_config(page_title="Rural Cyber-Help Desk", page_icon="🛡️", layout="wide")
@@ -58,6 +57,7 @@ else: # English
     voice_safe = "Safe message. This is a legitimate message."
 
 # --- MODEL TRAINING SECTION ---
+# Cognitive NLP Model
 training_messages = [
     "Your bank account is blocked. Click the link to update KYC immediately.",
     "Congratulations! You won a lottery of 10 lakhs. Call this number to claim.",
@@ -110,7 +110,7 @@ if allow_notification:
             # NLP Cognitive Analysis
             X_test = vectorizer.transform([selected_sms])
             prediction = nlp_model.predict(X_test)[0]
-            prob = nlp_model.predict_proba(X_test)[0]
+            prob = nlp_model.predict_proba(X_test)[0] # Confidence percentage
             scam_score = prob[0] * 100 if nlp_model.classes_[0] == 'Scam' else prob[1] * 100
 
             col1, col2 = st.columns([1, 1])
@@ -126,14 +126,12 @@ if allow_notification:
                     st.success(safe_msg)
                     voice_text = voice_safe
 
-                # Reliable Audio Generation using gTTS for Tamil and other languages
-                try:
-                    tts = gTTS(text=voice_text, lang=tts_lang, slow=False)
-                    audio_file = "voice_alert.mp3"
-                    tts.save(audio_file)
-                    st.audio(audio_file, format='audio/mp3', autoplay=True)
-                except Exception as e:
-                    st.warning("Audio generation note: Text alert active.")
+                # Foolproof Google TTS Audio URL Generation (Works for Tamil & English across all devices)
+                encoded_voice_text = urllib.parse.quote(voice_text)
+                audio_url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_voice_text}&tl={tts_lang}&client=tw-ob"
+                
+                # Play audio automatically using HTML audio component
+                st.markdown(f'<audio autoplay src="{audio_url}"></audio>', unsafe_allow_html=True)
 
                 # Live Bar Chart for Cognitive NLP Scam Confidence
                 st.markdown("#### 📊 Live Scam Risk Score")
