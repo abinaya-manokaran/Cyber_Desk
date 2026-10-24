@@ -18,34 +18,42 @@ language = st.sidebar.selectbox(
     ["Tamil (தமிழ்)", "Tanglish", "English"]
 )
 
-# Language Dictionary for UI & Speech Mapping
+# Language Dictionary for UI & Speech Configuration
 if language == "Tamil (தமிழ்)":
-    lang_code = "ta-IN"  # Explicit Tamil India voice tag
+    lang_code = "ta-IN"
     sim_title = "📲 புதிய SMS அறிவிப்பு பகுப்பாய்வு (SMS Notification Analysis)"
     analyze_btn = "🔔 அறிவிப்பை பகுப்பாய்வு செய் (Read & Analyze SMS)"
     scam_msg = "🚨 எச்சரிக்கை: இது ஒரு மோசடி குறுஞ்செய்தி! எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்!"
     safe_msg = "✅ பாதுகாப்பு: இது ஒரு சாதாரண குறுஞ்செய்திதான்."
     input_label = "✍️ சொந்தமாக SMS டைப் செய்யவும் அல்லது தேர்வு செய்யவும் (Enter or Paste Custom SMS):"
-    speech_scam = "எச்சரிக்கை! இது ஒரு மோசடி குறுஞ்செய்தி. எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்!"
-    speech_safe = "பாதுகாப்பானது! இது ஒரு சாதாரண குறுஞ்செய்திதான்."
+    
+    # Tamil Voice Text
+    voice_scam = "எச்சரிக்கை! இது ஒரு போலியான மோசடி குறுஞ்செய்தி. யாரும் எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்."
+    voice_safe = "பாதுகாப்பான செய்தி. இது ஒரு சாதாரண குறுஞ்செய்திதான்."
+
 elif language == "Tanglish":
-    lang_code = "en-IN"  # Indian English accent for better Tanglish flow
+    lang_code = "en-IN" # English synthesis reads Tanglish smoothly with Indian accent
     sim_title = "📲 Puthu SMS Notification Analysis"
     analyze_btn = "🔔 Notification Read & Analyze Pannu"
-    scam_msg = "🚨 ALERT: Idhu ஒரு Fake Fraud Message! Link-ai click seyyavendam!"
+    scam_msg = "🚨 ALERT: Idhu oru Fake Fraud Message! Link-ai click seyyavendam!"
     safe_msg = "✅ SAFE: Idhu normal message thaan."
     input_label = "✍️ Custom SMS Type/Paste Pannunga:"
-    speech_scam = "Warning! Idhu oru fake scam message. Link click pannatheenga!"
-    speech_safe = "Safe message! Idhu normal message thaan."
-else:
+    
+    # Tanglish Voice Text
+    voice_scam = "Warning! Idhu oru fake fraud message. Yaarum link-ai click seyyavendam!"
+    voice_safe = "Safe message. Idhu oru normal message thaan."
+
+else: # English
     lang_code = "en-US"
     sim_title = "📲 Live Incoming SMS Notification Analysis"
     analyze_btn = "🔔 Read & Analyze Notification"
     scam_msg = "🚨 ALERT: Scam Detected! Do not click any links!"
     safe_msg = "✅ SAFE: Legitimate Message."
     input_label = "✍️ Enter or Paste Custom SMS Received:"
-    speech_scam = "Warning! Scam message detected. Do not click any links!"
-    speech_safe = "This is a safe and legitimate message."
+    
+    # English Voice Text
+    voice_scam = "Warning! Scam message detected. Do not click any links."
+    voice_safe = "Safe message. This is a legitimate message."
 
 # --- MODEL TRAINING SECTION ---
 # Cognitive NLP Model
@@ -112,20 +120,21 @@ if allow_notification:
                 
                 if prediction == 'Scam':
                     st.error(scam_msg)
-                    voice_text = speech_scam
+                    voice_text = voice_scam
                 else:
                     st.success(safe_msg)
-                    voice_text = speech_safe
+                    voice_text = voice_safe
 
-                # Improved JS Text-to-Speech execution with selected lang_code
+                # Dynamic Voice Assistant Execution based on selected language
                 st.components.v1.html(
                     f"""
                     <script>
-                        window.speechSynthesis.cancel(); // Stop any pending speech
-                        var msg = new SpeechSynthesisUtterance({repr(voice_text)});
-                        msg.lang = '{lang_code}';
-                        msg.rate = 0.9; // Slightly slower for clarity
-                        window.speechSynthesis.speak(msg);
+                        if ('speechSynthesis' in window) {
+                            window.speechSynthesis.cancel(); // Stop previous speech if any
+                            var msg = new SpeechSynthesisUtterance("{voice_text}");
+                            msg.lang = "{lang_code}";
+                            window.speechSynthesis.speak(msg);
+                        }
                     </script>
                     """,
                     height=0
