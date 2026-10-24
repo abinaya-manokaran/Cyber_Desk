@@ -7,31 +7,14 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from gtts import gTTS
 import os
-import uuid
 
-# Streamlit Page Config & Professional Styling
+# Streamlit Page Config
 st.set_page_config(page_title="Rural Cyber-Help Desk", page_icon="🛡️", layout="wide")
 
-# Custom CSS for Professional Look
-st.markdown("""
-    <style>
-    .main {
-        background-color: #0e1117;
-    }
-    .stMetric {
-        background-color: #1f2937;
-        padding: 15px;
-        border-radius: 10px;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # App Header
-st.title("🛡️ Rural Community Cyber-Help Desk")
-st.markdown("### **Real-Time Cognitive & Behavioral Cyber Risk Analytics System**")
-st.markdown("---")
+st.title("🛡️ Rural Community Cyber-Help Desk: Real-Time Scam & Risk Analytics")
 
-# 1. Multi-Language Selection in Sidebar
+# 1. Multi-Language Selection
 language = st.sidebar.selectbox(
     "🌐 Choose Assistant Language / மொழியைத் தேர்ந்தெடுக்கவும்:", 
     ["Tamil (தமிழ்)", "Tanglish", "English"]
@@ -44,7 +27,9 @@ if language == "Tamil (தமிழ்)":
     analyze_btn = "🔔 அறிவிப்பை பகுப்பாய்வு செய் (Read & Analyze SMS)"
     scam_msg = "🚨 எச்சரிக்கை: இது ஒரு மோசடி குறுஞ்செய்தி! எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்!"
     safe_msg = "✅ பாதுகாப்பு: இது ஒரு சாதாரண குறுஞ்செய்திதான்."
-    input_label = "✍️ சொந்தமாக SMS டைப் செய்யவும் அல்லது தேர்வு செய்யவும்:"
+    input_label = "✍️ சொந்தமாக SMS டைப் செய்யவும் அல்லது தேர்வு செய்யவும் (Enter or Paste Custom SMS):"
+    
+    # Tamil Voice Text
     voice_scam = "எச்சரிக்கை! இது ஒரு போலியான மோசடி குறுஞ்செய்தி. யாரும் எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்."
     voice_safe = "பாதுகாப்பான செய்தி. இது ஒரு சாதாரண குறுஞ்செய்திதான்."
 
@@ -55,6 +40,8 @@ elif language == "Tanglish":
     scam_msg = "🚨 ALERT: Idhu oru Fake Fraud Message! Link-ai click seyyavendam!"
     safe_msg = "✅ SAFE: Idhu normal message thaan."
     input_label = "✍️ Custom SMS Type/Paste Pannunga:"
+    
+    # Tanglish Voice Text
     voice_scam = "Warning! Idhu oru fake fraud message. Yaarum link-ai click seyyavendam!"
     voice_safe = "Safe message. Idhu oru normal message thaan."
 
@@ -65,6 +52,8 @@ else: # English
     scam_msg = "🚨 ALERT: Scam Detected! Do not click any links!"
     safe_msg = "✅ SAFE: Legitimate Message."
     input_label = "✍️ Enter or Paste Custom SMS Received:"
+    
+    # English Voice Text
     voice_scam = "Warning! Scam message detected. Do not click any links."
     voice_safe = "Safe message. This is a legitimate message."
 
@@ -98,7 +87,8 @@ behavior_data['Risk_Cluster'] = kmeans.fit_predict(behavior_data[['Monthly_Trans
 # --- UI DASHBOARD LAYOUT ---
 st.subheader(sim_title)
 
-input_mode = st.radio("Choose Input Mode:", ["✍️ Type Custom SMS", "📋 Select Sample SMS"], horizontal=True)
+# Option to toggle between Preset Samples and Custom Manual Input
+input_mode = st.radio("Choose Input Mode:", ["✍️ Type Custom SMS", "📋 Select Sample SMS"])
 
 if input_mode == "📋 Select Sample SMS":
     sample_sms_list = [
@@ -111,10 +101,11 @@ if input_mode == "📋 Select Sample SMS":
 else:
     selected_sms = st.text_area(input_label, value="Urgent: Your bank account has been suspended! Update details now.")
 
+# Permission Toggle Simulation
 allow_notification = st.checkbox("🔔 Allow SMS Read & Voice Alert Permission (இணைப்பு அனுமதி)", value=True)
 
 if allow_notification:
-    if st.button(analyze_btn, type="primary"):
+    if st.button(analyze_btn):
         if selected_sms.strip() != "":
             # NLP Cognitive Analysis
             X_test = vectorizer.transform([selected_sms])
@@ -122,7 +113,7 @@ if allow_notification:
             prob = nlp_model.predict_proba(X_test)[0]
             scam_score = prob[0] * 100 if nlp_model.classes_[0] == 'Scam' else prob[1] * 100
 
-            col1, col2 = st.columns(2, gap="large")
+            col1, col2 = st.columns([1, 1])
 
             with col1:
                 st.markdown("### 🧠 Cognitive Analytics (NLP Analysis)")
@@ -135,27 +126,27 @@ if allow_notification:
                     st.success(safe_msg)
                     voice_text = voice_safe
 
-                # Unique filename generation using uuid so autoplay triggers on every new analysis
+                # Reliable Audio Generation using gTTS for Tamil and other languages
                 try:
-                    unique_filename = f"voice_alert_{uuid.uuid4()}.mp3"
                     tts = gTTS(text=voice_text, lang=tts_lang, slow=False)
-                    tts.save(unique_filename)
-                    st.audio(unique_filename, format='audio/mp3', autoplay=True)
+                    audio_file = "voice_alert.mp3"
+                    tts.save(audio_file)
+                    st.audio(audio_file, format='audio/mp3', autoplay=True)
                 except Exception as e:
-                    st.warning("Audio generation active.")
+                    st.warning("Audio generation note: Text alert active.")
 
-                # Professional Metrics & Bar Chart
+                # Live Bar Chart for Cognitive NLP Scam Confidence
                 st.markdown("#### 📊 Live Scam Risk Score")
                 fig_cog, ax_cog = plt.subplots(figsize=(5, 3))
-                ax_cog.bar(['Safe Score', 'Scam Risk Score'], [100 - scam_score, scam_score], color=['#10b981', '#ef4444'])
+                ax_cog.bar(['Safe Score', 'Scam Risk Score'], [100 - scam_score, scam_score], color=['green', 'red'])
                 ax_cog.set_ylabel("Percentage (%)")
-                ax_cog.grid(axis='y', linestyle='--', alpha=0.7)
                 st.pyplot(fig_cog)
 
             with col2:
                 st.markdown("### 📊 Behavioral Analytics (K-Means Clustering)")
                 st.write("User Risk Segmentation for Rural Community")
                 
+                # Live Plotting K-Means
                 fig_beh, ax_beh = plt.subplots(figsize=(5, 3.8))
                 
                 cluster_0_data = behavior_data[behavior_data['Risk_Cluster'] == 0]
@@ -163,17 +154,18 @@ if allow_notification:
 
                 ax_beh.scatter(cluster_0_data['Monthly_Transactions'], 
                                cluster_0_data['Digital_Awareness_Score'], 
-                               color='#ef4444', label='High Risk (Low Literacy)', s=90)
+                               color='red', label='High Risk (Low Literacy)', s=80)
                 
                 ax_beh.scatter(cluster_1_data['Monthly_Transactions'], 
                                cluster_1_data['Digital_Awareness_Score'], 
-                               color='#10b981', label='Safe Users', s=90)
+                               color='green', label='Safe Users', s=80)
                 
-                ax_beh.scatter([2], [20], color='#f59e0b', edgecolor='black', s=220, marker='*', label='Current SMS Recipient')
+                # Highlighting current simulated target user
+                ax_beh.scatter([2], [20], color='yellow', edgecolor='black', s=200, marker='*', label='Current SMS Recipient')
                 ax_beh.set_xlabel('Monthly Digital Transactions')
                 ax_beh.set_ylabel('Digital Awareness Score')
                 ax_beh.legend(loc='lower right', fontsize='small')
-                ax_beh.grid(True, linestyle='--', alpha=0.7)
+                ax_beh.grid(True)
                 st.pyplot(fig_beh)
         else:
             st.warning("Please type or select a message to analyze.")
