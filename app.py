@@ -5,6 +5,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+from gtts import gTTS
+import os
 
 # Streamlit Page Config
 st.set_page_config(page_title="Rural Cyber-Help Desk", page_icon="🛡️", layout="wide")
@@ -20,7 +22,7 @@ language = st.sidebar.selectbox(
 
 # Language Dictionary for UI & Speech Configuration
 if language == "Tamil (தமிழ்)":
-    lang_code = "ta-IN"
+    tts_lang = "ta"
     sim_title = "📲 புதிய SMS அறிவிப்பு பகுப்பாய்வு (SMS Notification Analysis)"
     analyze_btn = "🔔 அறிவிப்பை பகுப்பாய்வு செய் (Read & Analyze SMS)"
     scam_msg = "🚨 எச்சரிக்கை: இது ஒரு மோசடி குறுஞ்செய்தி! எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்!"
@@ -32,7 +34,7 @@ if language == "Tamil (தமிழ்)":
     voice_safe = "பாதுகாப்பான செய்தி. இது ஒரு சாதாரண குறுஞ்செய்திதான்."
 
 elif language == "Tanglish":
-    lang_code = "en-IN"
+    tts_lang = "en"
     sim_title = "📲 Puthu SMS Notification Analysis"
     analyze_btn = "🔔 Notification Read & Analyze Pannu"
     scam_msg = "🚨 ALERT: Idhu oru Fake Fraud Message! Link-ai click seyyavendam!"
@@ -44,7 +46,7 @@ elif language == "Tanglish":
     voice_safe = "Safe message. Idhu oru normal message thaan."
 
 else: # English
-    lang_code = "en-US"
+    tts_lang = "en"
     sim_title = "📲 Live Incoming SMS Notification Analysis"
     analyze_btn = "🔔 Read & Analyze Notification"
     scam_msg = "🚨 ALERT: Scam Detected! Do not click any links!"
@@ -56,7 +58,6 @@ else: # English
     voice_safe = "Safe message. This is a legitimate message."
 
 # --- MODEL TRAINING SECTION ---
-# Cognitive NLP Model
 training_messages = [
     "Your bank account is blocked. Click the link to update KYC immediately.",
     "Congratulations! You won a lottery of 10 lakhs. Call this number to claim.",
@@ -109,7 +110,7 @@ if allow_notification:
             # NLP Cognitive Analysis
             X_test = vectorizer.transform([selected_sms])
             prediction = nlp_model.predict(X_test)[0]
-            prob = nlp_model.predict_proba(X_test)[0] # Confidence percentage
+            prob = nlp_model.predict_proba(X_test)[0]
             scam_score = prob[0] * 100 if nlp_model.classes_[0] == 'Scam' else prob[1] * 100
 
             col1, col2 = st.columns([1, 1])
@@ -125,18 +126,14 @@ if allow_notification:
                     st.success(safe_msg)
                     voice_text = voice_safe
 
-                # Clean JavaScript injection without comment syntax conflict inside f-string
-                js_code = f"""
-                <script>
-                    if ('speechSynthesis' in window) {{
-                        window.speechSynthesis.cancel();
-                        var msg = new SpeechSynthesisUtterance("{voice_text}");
-                        msg.lang = "{lang_code}";
-                        window.speechSynthesis.speak(msg);
-                    }}
-                </script>
-                """
-                st.components.v1.html(js_code, height=0)
+                # Reliable Audio Generation using gTTS for Tamil and other languages
+                try:
+                    tts = gTTS(text=voice_text, lang=tts_lang, slow=False)
+                    audio_file = "voice_alert.mp3"
+                    tts.save(audio_file)
+                    st.audio(audio_file, format='audio/mp3', autoplay=True)
+                except Exception as e:
+                    st.warning("Audio generation note: Text alert active.")
 
                 # Live Bar Chart for Cognitive NLP Scam Confidence
                 st.markdown("#### 📊 Live Scam Risk Score")
