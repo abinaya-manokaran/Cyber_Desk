@@ -6,37 +6,32 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
-# Streamlit Page Config - Modern Layout
-st.set_page_config(
-    page_title="Rural Cyber-Help Desk", 
-    page_icon="🛡️", 
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Streamlit Page Config
+st.set_page_config(page_title="Rural Cyber-Help Desk", page_icon="🛡️", layout="wide")
 
-# Custom Professional Styling
+# Professional CSS Styling for Clean Look
 st.markdown("""
     <style>
-    .main-header {
-        font-size: 28px;
-        font-weight: 700;
-        color: #1E88E5;
-        margin-bottom: 5px;
+    .main {
+        background-color: #0e1117;
     }
-    .sub-header {
-        font-size: 15px;
-        color: #B0BEC5;
-        margin-bottom: 25px;
-    }
-    .stAlert {
+    .stButton>button {
+        width: 100%;
+        background-color: #ff4b4b;
+        color: white;
+        font-weight: bold;
         border-radius: 8px;
+        padding: 0.5rem;
+    }
+    .stButton>button:hover {
+        background-color: #ff2121;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # App Header
-st.markdown('<div class="main-header">🛡️ Rural Community Cyber-Help Desk</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">AI-Powered Real-Time SMS Scam Detection & User Risk Analytics Dashboard</div>', unsafe_allow_html=True)
+st.title("🛡️ Rural Community Cyber-Help Desk: Real-Time Scam & Risk Analytics")
+st.markdown("---")
 
 # 1. Multi-Language Selection
 language = st.sidebar.selectbox(
@@ -44,19 +39,14 @@ language = st.sidebar.selectbox(
     ["Tamil (தமிழ்)", "Tanglish", "English"]
 )
 
-st.sidebar.markdown("---")
-st.sidebar.info("💡 **Help Desk Note:**\nAutomatic Speech Alert will trigger instantly when analyzing incoming messages.")
-
 # Language Dictionary for UI & Speech Configuration
 if language == "Tamil (தமிழ்)":
     lang_code = "ta-IN"
     sim_title = "📲 புதிய SMS அறிவிப்பு பகுப்பாய்வு (SMS Notification Analysis)"
     analyze_btn = "🔔 அறிவிப்பை பகுப்பாய்வு செய் (Read & Analyze SMS)"
-    scam_msg = "🚨 எச்சரிக்கை: இது ஒரு மோசடி குறுஞ்செய்தி! எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்!"
+    scam_msg = "🚨 எச்சரிக்கை: இது ஒரு மோசடி குறுஞ்செய்தி! யாரும் எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்!"
     safe_msg = "✅ பாதுகாப்பு: இது ஒரு சாதாரண குறுஞ்செய்திதான்."
-    input_label = "✍️ SMS டைப் செய்யவும் அல்லது தேர்வு செய்யவும் (Enter or Paste Custom SMS):"
-    
-    # Tamil Voice Text
+    input_label = "✍️ சொந்தமாக SMS டைப் செய்யவும் அல்லது தேர்வு செய்யவும் (Enter or Paste Custom SMS):"
     voice_scam = "எச்சரிக்கை! இது ஒரு போலியான மோசடி குறுஞ்செய்தி. யாரும் எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்."
     voice_safe = "பாதுகாப்பான செய்தி. இது ஒரு சாதாரண குறுஞ்செய்திதான்."
 
@@ -67,10 +57,8 @@ elif language == "Tanglish":
     scam_msg = "🚨 ALERT: Idhu oru Fake Fraud Message! Link-ai click seyyavendam!"
     safe_msg = "✅ SAFE: Idhu normal message thaan."
     input_label = "✍️ Custom SMS Type/Paste Pannunga:"
-    
-    # Tanglish Voice Text
     voice_scam = "Warning! Idhu oru fake fraud message. Yaarum link-ai click seyyavendam!"
-    voice_safe = "Safe message. Idhu oru normal message thaan."
+    voice_safe = "Safe message. Idhu normal message thaan."
 
 else: # English
     lang_code = "en-US"
@@ -79,8 +67,6 @@ else: # English
     scam_msg = "🚨 ALERT: Scam Detected! Do not click any links!"
     safe_msg = "✅ SAFE: Legitimate Message."
     input_label = "✍️ Enter or Paste Custom SMS Received:"
-    
-    # English Voice Text
     voice_scam = "Warning! Scam message detected. Do not click any links."
     voice_safe = "Safe message. This is a legitimate message."
 
@@ -114,36 +100,34 @@ behavior_data['Risk_Cluster'] = kmeans.fit_predict(behavior_data[['Monthly_Trans
 # --- UI DASHBOARD LAYOUT ---
 st.subheader(sim_title)
 
-input_mode = st.radio("Select Input Method:", ["✍️ Custom Text Input", "📋 Sample SMS Templates"], horizontal=True)
+input_mode = st.radio("Choose Input Mode:", ["✍️ Type Custom SMS", "📋 Select Sample SMS"], horizontal=True)
 
-if input_mode == "📋 Sample SMS Templates":
+if input_mode == "📋 Select Sample SMS":
     sample_sms_list = [
         "Urgent: Your SBI Bank Account has been locked! Verify KYC now: http://sbi-fake.com",
         "Hi Abinaya, please bring the computer science notes tomorrow.",
         "Congratulations! You won Rs. 50,000 cash reward. Click to claim immediately.",
         "Your electricity connection will be disconnected by 9 PM tonight due to unpaid bill."
     ]
-    selected_sms = st.selectbox("📩 Choose Sample Message:", sample_sms_list)
+    selected_sms = st.selectbox("📩 Select Sample Notification:", sample_sms_list)
 else:
-    selected_sms = st.text_area(input_label, value="Urgent: Your bank account has been suspended! Update details now.", height=80)
+    selected_sms = st.text_area(input_label, value="Urgent: Your bank account has been suspended! Update details now.")
 
-allow_notification = st.checkbox("🔔 Enable Live SMS Sync & Voice Alerts", value=True)
+allow_notification = st.checkbox("🔔 Allow SMS Read & Voice Alert Permission (இணைப்பு அனுமதி)", value=True)
 
 if allow_notification:
-    if st.button(analyze_btn, type="primary"):
+    if st.button(analyze_btn):
         if selected_sms.strip() != "":
-            # NLP Cognitive Analysis
             X_test = vectorizer.transform([selected_sms])
             prediction = nlp_model.predict(X_test)[0]
             prob = nlp_model.predict_proba(X_test)[0]
             scam_score = prob[0] * 100 if nlp_model.classes_[0] == 'Scam' else prob[1] * 100
 
-            st.markdown("---")
-            col1, col2 = st.columns([1, 1], gap="medium")
+            col1, col2 = st.columns(2, gap="medium")
 
             with col1:
-                st.markdown("### 🧠 Cognitive Analytics (NLP Model)")
-                st.info(f"**Analyzed Message:**\n\n_{selected_sms}_")
+                st.markdown("### 🧠 Cognitive Analytics (NLP Analysis)")
+                st.info(f"**Incoming Message Text:**\n_{selected_sms}_")
                 
                 if prediction == 'Scam':
                     st.error(scam_msg)
@@ -152,68 +136,48 @@ if allow_notification:
                     st.success(safe_msg)
                     voice_text = voice_safe
 
-                # Clean Instant JavaScript Speech Synthesis (No Audio Player UI)
-                clean_voice_text = voice_text.replace("'", "").replace('"', '')
-                js_speech = f"""
+                # Clean Automatic Speech Synthesis (No audio player widget)
+                js_code = f"""
                 <script>
-                    function speakNow() {{
-                        if ('speechSynthesis' in window) {{
-                            window.speechSynthesis.cancel();
-                            var utterance = new SpeechSynthesisUtterance("{clean_voice_text}");
-                            utterance.lang = "{lang_code}";
-                            utterance.rate = 0.9;
-                            window.speechSynthesis.speak(utterance);
-                        }}
+                    if ('speechSynthesis' in window) {{
+                        window.speechSynthesis.cancel();
+                        var msg = new SpeechSynthesisUtterance("{voice_text}");
+                        msg.lang = "{lang_code}";
+                        window.speechSynthesis.speak(msg);
                     }}
-                    setTimeout(speakNow, 200);
                 </script>
                 """
-                st.components.v1.html(js_speech, height=0)
+                st.components.v1.html(js_code, height=0)
 
-                # Modern Bar Chart Design
-                st.markdown("#### 📊 Risk Assessment Confidence")
+                st.markdown("#### 📊 Live Scam Risk Score")
                 fig_cog, ax_cog = plt.subplots(figsize=(5, 3))
-                fig_cog.patch.set_facecolor('#0E1117')
-                ax_cog.set_facecolor('#0E1117')
-                
-                bars = ax_cog.bar(['Safe Score', 'Scam Score'], [100 - scam_score, scam_score], color=['#2E7D32', '#C62828'], width=0.5)
-                ax_cog.set_ylabel("Probability (%)", color='white')
-                ax_cog.tick_params(colors='white')
-                ax_cog.set_ylim(0, 100)
-                
-                for bar in bars:
-                    yval = bar.get_height()
-                    ax_cog.text(bar.get_x() + bar.get_width()/2.0, yval + 2, f"{yval:.1f}%", ha='center', va='bottom', color='white', fontweight='bold')
-                
+                ax_cog.bar(['Safe Score', 'Scam Risk Score'], [100 - scam_score, scam_score], color=['#2ecc71', '#e74c3c'])
+                ax_cog.set_ylabel("Percentage (%)")
+                ax_cog.grid(axis='y', linestyle='--', alpha=0.7)
                 st.pyplot(fig_cog)
 
             with col2:
-                st.markdown("### 📊 Behavioral Analytics (K-Means)")
-                st.write("User Demographics & Digital Vulnerability Segmentation")
+                st.markdown("### 📊 Behavioral Analytics (K-Means Clustering)")
+                st.write("User Risk Segmentation for Rural Community")
                 
-                # Styled K-Means Plot
                 fig_beh, ax_beh = plt.subplots(figsize=(5, 3.8))
-                fig_beh.patch.set_facecolor('#0E1117')
-                ax_beh.set_facecolor('#0E1117')
                 
                 cluster_0_data = behavior_data[behavior_data['Risk_Cluster'] == 0]
                 cluster_1_data = behavior_data[behavior_data['Risk_Cluster'] == 1]
 
                 ax_beh.scatter(cluster_0_data['Monthly_Transactions'], 
                                cluster_0_data['Digital_Awareness_Score'], 
-                               color='#FF5252', label='High Vulnerability Group', s=90, edgecolors='white')
+                               color='#e74c3c', label='High Risk (Low Literacy)', s=90)
                 
                 ax_beh.scatter(cluster_1_data['Monthly_Transactions'], 
                                cluster_1_data['Digital_Awareness_Score'], 
-                               color='#66BB6A', label='Safe / Aware Users', s=90, edgecolors='white')
+                               color='#2ecc71', label='Safe Users', s=90)
                 
-                # Highlight recipient
-                ax_beh.scatter([2], [20], color='#FFD54F', edgecolor='black', s=220, marker='*', label='Current Recipient')
-                ax_beh.set_xlabel('Monthly Digital Transactions', color='white')
-                ax_beh.set_ylabel('Digital Awareness Score', color='white')
-                ax_beh.tick_params(colors='white')
-                ax_beh.legend(loc='lower right', facecolor='#1E1E1E', edgecolor='none', labelcolor='white', fontsize='small')
-                ax_beh.grid(True, linestyle='--', alpha=0.3)
+                ax_beh.scatter([2], [20], color='#f1c40f', edgecolor='black', s=220, marker='*', label='Current SMS Recipient')
+                ax_beh.set_xlabel('Monthly Digital Transactions')
+                ax_beh.set_ylabel('Digital Awareness Score')
+                ax_beh.legend(loc='lower right', fontsize='small')
+                ax_beh.grid(True, linestyle='--', alpha=0.7)
                 st.pyplot(fig_beh)
         else:
             st.warning("Please type or select a message to analyze.")
