@@ -143,13 +143,18 @@ if allow_notification:
                 st.markdown("### 📊 Behavioral Analytics (K-Means Clustering)")
                 st.write("User Risk Segmentation for Rural Community")
                 
-                # Live Plotting K-Means
+                # Live Plotting K-Means (Fixed Scatter Logic)
                 fig_beh, ax_beh = plt.subplots(figsize=(5, 3.8))
-                ax_beh.scatter(behavior_data[behavior_data['Risk_Cluster'] == 0]['Monthly_Transactions'], 
-                               behavior_data[behavior_data['Risk_Cluster'] == 1 if len(behavior_data[behavior_data['Risk_Cluster'] == 1]) > 0 else 0]['Digital_Awareness_Score'], 
+                
+                cluster_0_data = behavior_data[behavior_data['Risk_Cluster'] == 0]
+                cluster_1_data = behavior_data[behavior_data['Risk_Cluster'] == 1]
+
+                ax_beh.scatter(cluster_0_data['Monthly_Transactions'], 
+                               cluster_0_data['Digital_Awareness_Score'], 
                                color='red', label='High Risk (Low Literacy)', s=80)
-                ax_beh.scatter(behavior_data[behavior_data['Risk_Cluster'] == 1]['Monthly_Transactions'], 
-                               behavior_data[behavior_data['Risk_Cluster'] == 1]['Digital_Awareness_Score'], 
+                
+                ax_beh.scatter(cluster_1_data['Monthly_Transactions'], 
+                               cluster_1_data['Digital_Awareness_Score'], 
                                color='green', label='Safe Users', s=80)
                 
                 # Highlighting current simulated target user
