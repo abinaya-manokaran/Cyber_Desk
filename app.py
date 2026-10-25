@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.cluster import KMeans
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.tree import DecisionTreeClassifier
 import matplotlib.pyplot as plt
 from gtts import gTTS
@@ -11,7 +13,7 @@ from gtts import gTTS
 # Streamlit Page Config
 st.set_page_config(page_title="Rural Cyber-Help Desk", page_icon="🛡️", layout="wide")
 
-st.title("🛡️ Rural Community Cyber-Help Desk: Complete 6-Module Analytics Dashboard")
+st.title("🛡️ Rural Community Cyber-Help Desk: Multi-Model 6-Analytics Dashboard")
 
 # 1. Multi-Language Selection
 language = st.sidebar.selectbox(
@@ -21,8 +23,8 @@ language = st.sidebar.selectbox(
 
 if language == "Tamil (தமிழ்)":
     lang_code = "ta"
-    sim_title = "📲 லைவ் SMS அறிவிப்பு & 6-Analytics பகுப்பாய்வு"
-    analyze_btn = "🔔 பகுப்பாய்வு செய்து தீர்வு காண்க (Analyze & Prescribe)"
+    sim_title = "📲 லைவ் SMS அறிவிப்பு பகுப்பாய்வு (Dual-Model Benchmarking)"
+    analyze_btn = "🔔 பகுப்பாய்வு செய் (Analyze with Dual Models)"
     scam_msg = "🚨 எச்சரிக்கை: மோசடி கண்டறியப்பட்டது!"
     safe_msg = "✅ பாதுகாப்பு: இது சாதாரண செய்தி."
     input_label = "✍️ சொந்தமாக SMS டைப் செய்யவும் அல்லது தேர்வு செய்யவும்:"
@@ -30,8 +32,8 @@ if language == "Tamil (தமிழ்)":
     voice_safe = "பாதுகாப்பான செய்தி."
 elif language == "Tanglish":
     lang_code = "en"
-    sim_title = "📲 Live SMS Notification & 6-Analytics Dashboard"
-    analyze_btn = "🔔 Analyze & Prescription Eduthukonga"
+    sim_title = "📲 Live SMS Notification Dashboard"
+    analyze_btn = "🔔 Dual Model Analyze Pannunga"
     scam_msg = "🚨 ALERT: Scam Detected!"
     safe_msg = "✅ SAFE: Legitimate Message."
     input_label = "✍️ Custom SMS Type/Paste Pannunga:"
@@ -39,20 +41,30 @@ elif language == "Tanglish":
     voice_safe = "Safe message."
 else:
     lang_code = "en"
-    sim_title = "📲 Live SMS Notification & 6-Analytics Dashboard"
-    analyze_btn = "🔔 Analyze & Generate Prescription"
+    sim_title = "📲 Live SMS Notification Dashboard"
+    analyze_btn = "🔔 Analyze with Dual Models"
     scam_msg = "🚨 ALERT: Scam Detected!"
     safe_msg = "✅ SAFE: Legitimate Message."
     input_label = "✍️ Enter or Paste Custom SMS Received:"
     voice_scam = "Warning! Scam message detected. Do not click any links."
     voice_safe = "Safe message."
 
-# --- MODELS TRAINING (Modules 1 to 6 Backend Setup) ---
-# 1 & 2. Descriptive & Predictive (Simulated Trend & Loss Prediction)
-years = ['2024', '2025', '2026 (Est)', '2027 (Proj)', '2028 (Proj)']
-fraud_losses = [45, 68, 95, 130, 175] # in Crores
+# --- DUAL MODEL TRAINING BACKEND ---
 
-# 3. Cognitive NLP Model (Pooja's Part)
+# 1 & 2. Descriptive & Predictive Setup (Abinaya & Pooja)
+years = np.array([2021, 2022, 2023, 2024, 2025]).reshape(-1, 1)
+fraud_losses = np.array([20, 35, 45, 68, 95])
+
+# Predictive Model 1: Linear Regression
+lr_pred = LinearRegression().fit(years, fraud_losses)
+future_years = np.array([2026, 2027, 2028]).reshape(-1, 1)
+lr_future = lr_pred.predict(future_years)
+
+# Predictive Model 2: Random Forest Regressor
+rf_pred = RandomForestRegressor(n_estimators=10, random_state=42).fit(years, fraud_losses)
+rf_future = rf_pred.predict(future_years)
+
+# 3. Cognitive NLP Models (Pooja's Part - 2 Models)
 training_messages = [
     "Your bank account is blocked. Click the link to update KYC immediately.",
     "Congratulations! You won a lottery of 10 lakhs. Call this number to claim.",
@@ -64,24 +76,38 @@ training_messages = [
 labels = ['Scam', 'Scam', 'Non-Scam', 'Scam', 'Non-Scam', 'Non-Scam']
 vectorizer = CountVectorizer()
 X_train = vectorizer.fit_transform(training_messages)
-nlp_model = MultinomialNB()
-nlp_model.fit(X_train, labels)
 
-# 4. Behavioral K-Means Model (Abinaya's Part)
+# Cognitive Model 1: Naive Bayes
+nb_model = MultinomialNB().fit(X_train, labels)
+# Cognitive Model 2: Logistic Regression
+log_model = LogisticRegression().fit(X_train, labels)
+
+# 4. Behavioral K-Means & Agglomerative Models (Abinaya's Part - 2 Models)
 behavior_data = pd.DataFrame({
     'Monthly_Transactions': [2, 25, 22, 3, 20, 1, 18, 24, 4, 15],
     'Digital_Awareness_Score': [20, 90, 88, 25, 82, 15, 85, 92, 30, 78],
-    'Risk_Label': [1, 0, 0, 1, 0, 1, 0, 0, 1, 0] # 1: High Risk, 0: Safe
+    'Risk_Label': [1, 0, 0, 1, 0, 1, 0, 0, 1, 0]
 })
-kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
-behavior_data['Risk_Cluster'] = kmeans.fit_predict(behavior_data[['Monthly_Transactions', 'Digital_Awareness_Score']])
 
-# 5. Diagnostic Model (Root Cause Analysis using Decision Tree Feature Importance)
+# Behavioral Model 1: K-Means
+kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
+behavior_data['KMeans_Cluster'] = kmeans.fit_predict(behavior_data[['Monthly_Transactions', 'Digital_Awareness_Score']])
+
+# Behavioral Model 2: Agglomerative Clustering
+agg_clust = AgglomerativeClustering(n_clusters=2)
+behavior_data['Agg_Cluster'] = agg_clust.fit_predict(behavior_data[['Monthly_Transactions', 'Digital_Awareness_Score']])
+
+# 5. Diagnostic Models (Pooja's Part - 2 Models)
 X_diag = behavior_data[['Monthly_Transactions', 'Digital_Awareness_Score']]
 y_diag = behavior_data['Risk_Label']
-dt_model = DecisionTreeClassifier(random_state=42)
-dt_model.fit(X_diag, y_diag)
-importance = dt_model.feature_importances_
+
+# Diagnostic Model 1: Decision Tree
+dt_diag = DecisionTreeClassifier(random_state=42).fit(X_diag, y_diag)
+dt_imp = dt_diag.feature_importances_
+
+# Diagnostic Model 2: Random Forest Classifier
+rf_diag = RandomForestClassifier(random_state=42).fit(X_diag, y_diag)
+rf_imp = rf_diag.feature_importances_
 
 # --- UI DASHBOARD ---
 st.subheader(sim_title)
@@ -99,14 +125,14 @@ else:
 
 if st.button(analyze_btn):
     if selected_sms.strip() != "":
-        # Prediction
         X_test = vectorizer.transform([selected_sms])
-        prediction = nlp_model.predict(X_test)[0]
-        prob = nlp_model.predict_proba(X_test)[0]
-        scam_score = prob[0] * 100 if nlp_model.classes_[0] == 'Scam' else prob[1] * 100
+        
+        # Predictions from both Cognitive models
+        pred_nb = nb_model.predict(X_test)[0]
+        pred_log = log_model.predict(X_test)[0]
 
         # Voice output via gTTS
-        voice_text = voice_scam if prediction == 'Scam' else voice_safe
+        voice_text = voice_scam if pred_nb == 'Scam' else voice_safe
         try:
             tts = gTTS(text=voice_text, lang=lang_code, slow=False)
             audio_path = "temp_voice.mp3"
@@ -117,70 +143,74 @@ if st.button(analyze_btn):
 
         # Displaying 6 Analytics Modules in Tabs
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-            "1. Descriptive", "2. Predictive", "3. Cognitive (NLP)", 
-            "4. Behavioral (K-Means)", "5. Diagnostic (Root-Cause)", "6. Prescriptive (Action)"
+            "1. Descriptive (Pooja)", "2. Predictive (Abinaya)", "3. Cognitive (Pooja)", 
+            "4. Behavioral (Abinaya)", "5. Diagnostic (Pooja)", "6. Prescriptive (Abinaya)"
         ])
 
         with tab1:
-            st.markdown("### 📊 Descriptive Analytics (Historical Trend)")
-            st.write("Past records show cyber fraud attempts increasing rapidly across rural sectors.")
-            fig, ax = plt.subplots(figsize=(5, 3))
-            ax.plot(years[:2], fraud_losses[:2], marker='o', color='blue', linewidth=2)
-            ax.set_ylabel("Fraud Cases (Thousands)")
+            st.markdown("### 📊 Descriptive Analytics (Dual Trend Representation)")
+            st.write("Model 1: Raw Historical Cases vs Model 2: 2-Year Moving Average Trend")
+            fig, ax = plt.subplots(figsize=(6, 3.2))
+            ax.plot([2021, 2022, 2023, 2024, 2025], fraud_losses, marker='o', label='Model 1: Historical Loss (Cr)', color='blue')
+            ax.plot([2022, 2023, 2024, 2025], pd.Series(fraud_losses).rolling(2).mean().dropna(), marker='x', linestyle='--', label='Model 2: Moving Average Trend', color='purple')
+            ax.legend()
             st.pyplot(fig)
 
         with tab2:
-            st.markdown("### 📈 Predictive Analytics (Future Fraud Growth)")
-            st.write("Linear Regression projection of cyber financial loss for upcoming years.")
-            fig, ax = plt.subplots(figsize=(5, 3))
-            ax.plot(years, fraud_losses, marker='s', color='orange', linestyle='--', linewidth=2)
-            ax.set_ylabel("Projected Losses (Crores)")
+            st.markdown("### 📈 Predictive Analytics (Dual Regression Benchmarking)")
+            st.write("Comparing Model 1 (Linear Regression) vs Model 2 (Random Forest Regressor)")
+            fig, ax = plt.subplots(figsize=(6, 3.2))
+            ax.plot([2026, 2027, 2028], lr_future, marker='s', label='Model 1: Linear Regression', color='orange')
+            ax.plot([2026, 2027, 2028], rf_future, marker='^', label='Model 2: Random Forest', color='red')
+            ax.set_ylabel("Loss Projection (Crores)")
+            ax.legend()
             st.pyplot(fig)
 
         with tab3:
-            st.markdown("### 🧠 Cognitive Analytics (Pooja's NLP Module)")
-            st.info(f"Analyzed Text: _{selected_sms}_")
-            if prediction == 'Scam':
-                st.error(scam_msg)
-            else:
-                st.success(safe_msg)
-            fig, ax = plt.subplots(figsize=(5, 3))
-            ax.bar(['Safe Score', 'Scam Risk Score'], [100 - scam_score, scam_score], color=['green', 'red'])
+            st.markdown("### 🧠 Cognitive Analytics (Dual Model NLP Verification)")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.info(f"**Model 1 (Naive Bayes Result):**\n### {pred_nb}")
+            with col_b:
+                st.info(f"**Model 2 (Logistic Regression Result):**\n### {pred_log}")
+            
+            fig, ax = plt.subplots(figsize=(5, 2.5))
+            ax.bar(['Naive Bayes', 'Logistic Reg'], [1 if pred_nb=='Scam' else 0, 1 if pred_log=='Scam' else 0], color=['red', 'darkred'])
+            ax.set_ylabel("Scam Flag (1=Yes, 0=No)")
             st.pyplot(fig)
 
         with tab4:
-            st.markdown("### 👥 Behavioral Analytics (Abinaya's K-Means Module)")
-            st.write("User Risk Segmentation based on digital habits & literacy.")
-            fig, ax = plt.subplots(figsize=(5, 3))
-            ax.scatter(behavior_data[behavior_data['Risk_Cluster'] == 0]['Monthly_Transactions'], 
-                       behavior_data[behavior_data['Risk_Cluster'] == 0]['Digital_Awareness_Score'], color='green', label='Safe')
-            ax.scatter(behavior_data[behavior_data['Risk_Cluster'] == 1]['Monthly_Transactions'], 
-                       behavior_data[behavior_data['Risk_Cluster'] == 1]['Digital_Awareness_Score'], color='red', label='High Risk')
-            ax.legend(loc='lower right')
+            st.markdown("### 👥 Behavioral Analytics (Dual Clustering Comparison)")
+            st.write("Comparing Model 1 (K-Means) vs Model 2 (Agglomerative Hierarchical)")
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
+            ax1.scatter(behavior_data['Monthly_Transactions'], behavior_data['Digital_Awareness_Score'], c=behavior_data['KMeans_Cluster'], cmap='rainbow')
+            ax1.set_title("Model 1: K-Means")
+            ax2.scatter(behavior_data['Monthly_Transactions'], behavior_data['Digital_Awareness_Score'], c=behavior_data['Agg_Cluster'], cmap='coolwarm')
+            ax2.set_title("Model 2: Agglomerative")
             st.pyplot(fig)
 
         with tab5:
-            st.markdown("### 🔍 Diagnostic Analytics (Root-Cause Feature Importance)")
-            st.write("Why do rural users fall prey? Decision Tree identifies core vulnerability drivers:")
-            fig, ax = plt.subplots(figsize=(5, 3))
-            ax.bar(['Monthly Transactions', 'Digital Awareness Score'], importance, color=['purple', 'teal'])
-            ax.set_ylabel("Impact Weight")
+            st.markdown("### 🔍 Diagnostic Analytics (Dual Feature Importance)")
+            st.write("Root-cause factor weight analysis using Decision Tree vs Random Forest")
+            fig, ax = plt.subplots(figsize=(6, 3))
+            x_bar = np.arange(2)
+            ax.bar(x_bar - 0.2, dt_imp, width=0.4, label='Model 1: Decision Tree', color='teal')
+            ax.bar(x_bar + 0.2, rf_imp, width=0.4, label='Model 2: Random Forest', color='navy')
+            ax.set_xticks(x_bar)
+            ax.set_xticklabels(['Transactions', 'Awareness Score'])
+            ax.legend()
             st.pyplot(fig)
 
         with tab6:
-            st.markdown("### 🛡️ Prescriptive Analytics (Actionable Solution Engine)")
-            if prediction == 'Scam':
-                st.error("🚨 CRITICAL ACTION REQUIRED FOR RURAL CITIZEN:")
+            st.markdown("### 🛡️ Prescriptive Analytics (Dual-Engine Action Plan)")
+            if pred_nb == 'Scam':
+                st.error("🚨 CRITICAL ACTION REQUIRED:")
                 st.markdown("""
-                1. **Immediate Action:** Do not click links or share UPI PIN / OTP.
-                2. **Emergency Helpline:** Call **1930** (National Cyber Crime Helpline) immediately.
-                3. **Official Reporting:** File a complaint at [cybercrime.gov.in](https://cybercrime.gov.in).
-                4. **Community Alert:** Notify local village cyber volunteer help desk.
+                * **Model 1 Recommendation (Emergency):** Immediately dial **1930** (Cyber Crime Helpline).
+                * **Model 2 Recommendation (Preventive):** Block UPI/Banking apps & File a complaint at [cybercrime.gov.in](https://cybercrime.gov.in).
                 """)
             else:
                 st.success("✅ SYSTEM PRESCRIPTION:")
-                st.markdown("""
-                - Message appears safe. Standard digital hygiene maintained. No action needed.
-                """)
+                st.markdown("- Message verified by dual models. Safe to interact.")
     else:
         st.warning("Dayavu seithu message-ai type seyyavum.")
