@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import urllib.parse
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+from gtts import gTTS
+import os
 
 # Streamlit Page Config
 st.set_page_config(page_title="Rural Cyber-Help Desk", page_icon="🛡️", layout="wide")
@@ -21,43 +22,39 @@ language = st.sidebar.selectbox(
 
 # Language Dictionary for UI & Speech Configuration
 if language == "Tamil (தமிழ்)":
-    tts_lang = "ta"
+    lang_code = "ta"
     sim_title = "📲 புதிய SMS அறிவிப்பு பகுப்பாய்வு (SMS Notification Analysis)"
     analyze_btn = "🔔 அறிவிப்பை பகுப்பாய்வு செய் (Read & Analyze SMS)"
     scam_msg = "🚨 எச்சரிக்கை: இது ஒரு மோசடி குறுஞ்செய்தி! எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்!"
     safe_msg = "✅ பாதுகாப்பு: இது ஒரு சாதாரண குறுஞ்செய்திதான்."
     input_label = "✍️ சொந்தமாக SMS டைப் செய்யவும் அல்லது தேர்வு செய்யவும் (Enter or Paste Custom SMS):"
     
-    # Tamil Voice Text
     voice_scam = "எச்சரிக்கை! இது ஒரு போலியான மோசடி குறுஞ்செய்தி. யாரும் எந்த இணைப்பையும் கிளிக் செய்ய வேண்டாம்."
     voice_safe = "பாதுகாப்பான செய்தி. இது ஒரு சாதாரண குறுஞ்செய்திதான்."
 
 elif language == "Tanglish":
-    tts_lang = "en"
+    lang_code = "en"
     sim_title = "📲 Puthu SMS Notification Analysis"
     analyze_btn = "🔔 Notification Read & Analyze Pannu"
     scam_msg = "🚨 ALERT: Idhu oru Fake Fraud Message! Link-ai click seyyavendam!"
     safe_msg = "✅ SAFE: Idhu normal message thaan."
     input_label = "✍️ Custom SMS Type/Paste Pannunga:"
     
-    # Tanglish Voice Text
     voice_scam = "Warning! Idhu oru fake fraud message. Yaarum link-ai click seyyavendam!"
     voice_safe = "Safe message. Idhu oru normal message thaan."
 
 else: # English
-    tts_lang = "en"
+    lang_code = "en"
     sim_title = "📲 Live Incoming SMS Notification Analysis"
     analyze_btn = "🔔 Read & Analyze Notification"
     scam_msg = "🚨 ALERT: Scam Detected! Do not click any links!"
     safe_msg = "✅ SAFE: Legitimate Message."
     input_label = "✍️ Enter or Paste Custom SMS Received:"
     
-    # English Voice Text
     voice_scam = "Warning! Scam message detected. Do not click any links."
     voice_safe = "Safe message. This is a legitimate message."
 
 # --- MODEL TRAINING SECTION ---
-# Cognitive NLP Model
 training_messages = [
     "Your bank account is blocked. Click the link to update KYC immediately.",
     "Congratulations! You won a lottery of 10 lakhs. Call this number to claim.",
@@ -87,7 +84,6 @@ behavior_data['Risk_Cluster'] = kmeans.fit_predict(behavior_data[['Monthly_Trans
 # --- UI DASHBOARD LAYOUT ---
 st.subheader(sim_title)
 
-# Option to toggle between Preset Samples and Custom Manual Input
 input_mode = st.radio("Choose Input Mode:", ["✍️ Type Custom SMS", "📋 Select Sample SMS"])
 
 if input_mode == "📋 Select Sample SMS":
@@ -101,16 +97,14 @@ if input_mode == "📋 Select Sample SMS":
 else:
     selected_sms = st.text_area(input_label, value="Urgent: Your bank account has been suspended! Update details now.")
 
-# Permission Toggle Simulation
 allow_notification = st.checkbox("🔔 Allow SMS Read & Voice Alert Permission (இணைப்பு அனுமதி)", value=True)
 
 if allow_notification:
     if st.button(analyze_btn):
         if selected_sms.strip() != "":
-            # NLP Cognitive Analysis
             X_test = vectorizer.transform([selected_sms])
             prediction = nlp_model.predict(X_test)[0]
-            prob = nlp_model.predict_proba(X_test)[0] # Confidence percentage
+            prob = nlp_model.predict_proba(X_test)[0]
             scam_score = prob[0] * 100 if nlp_model.classes_[0] == 'Scam' else prob[1] * 100
 
             col1, col2 = st.columns([1, 1])
@@ -126,12 +120,14 @@ if allow_notification:
                     st.success(safe_msg)
                     voice_text = voice_safe
 
-                # Foolproof Google TTS Audio URL Generation (Works for Tamil & English across all devices)
-                encoded_voice_text = urllib.parse.quote(voice_text)
-                audio_url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_voice_text}&tl={tts_lang}&client=tw-ob"
-                
-                # Play audio automatically using HTML audio component
-                st.markdown(f'<audio autoplay src="{audio_url}"></audio>', unsafe_allow_html=True)
+                # Generate Audio using gTTS (Google Text-to-Speech) for 100% Working Tamil/English Voice
+                try:
+                    tts = gTTS(text=voice_text, lang=lang_code, slow=False)
+                    audio_path = "temp_voice.mp3"
+                    tts.save(audio_path)
+                    st.audio(audio_path, format="audio/mp3", autoplay=True)
+                except Exception as e:
+                    st.write("Voice generation note: Check audio component.")
 
                 # Live Bar Chart for Cognitive NLP Scam Confidence
                 st.markdown("#### 📊 Live Scam Risk Score")
@@ -144,7 +140,6 @@ if allow_notification:
                 st.markdown("### 📊 Behavioral Analytics (K-Means Clustering)")
                 st.write("User Risk Segmentation for Rural Community")
                 
-                # Live Plotting K-Means
                 fig_beh, ax_beh = plt.subplots(figsize=(5, 3.8))
                 
                 cluster_0_data = behavior_data[behavior_data['Risk_Cluster'] == 0]
@@ -158,7 +153,6 @@ if allow_notification:
                                cluster_1_data['Digital_Awareness_Score'], 
                                color='green', label='Safe Users', s=80)
                 
-                # Highlighting current simulated target user
                 ax_beh.scatter([2], [20], color='yellow', edgecolor='black', s=200, marker='*', label='Current SMS Recipient')
                 ax_beh.set_xlabel('Monthly Digital Transactions')
                 ax_beh.set_ylabel('Digital Awareness Score')
