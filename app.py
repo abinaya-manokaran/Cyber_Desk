@@ -171,8 +171,13 @@ if st.button(analyze_btn):
                 st.info(f"**Model 2 (Logistic Regression):**\n### {pred_log}")
             
             fig, ax = plt.subplots(figsize=(5, 2.5))
-            ax.bar(['Naive Bayes', 'Logistic Reg'], [1 if pred_nb=='Scam' else 0, 1 if pred_log=='Scam' else 0], color=['red', 'darkred'])
-            ax.set_ylabel("Scam Flag (1=Yes, 0=No)")
+            val_nb = 1 if pred_nb == 'Scam' else 0.05
+            val_log = 1 if pred_log == 'Scam' else 0.05
+            
+            colors = ['red' if pred_nb=='Scam' else 'green', 'darkred' if pred_log=='Scam' else 'darkgreen']
+            ax.bar(['Naive Bayes', 'Logistic Reg'], [val_nb, val_log], color=colors)
+            ax.set_ylabel("Scam Flag (1=Scam, 0=Safe)")
+            ax.set_ylim(0, 1.1)
             st.pyplot(fig)
 
         with tab4:
